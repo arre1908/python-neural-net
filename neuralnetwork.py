@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as mp
-from pylab import show
 
 # for testing purposes
-# np.random.seed(100) 
+# np.random.seed(100)
 
 def sigmoid(t):
     return 1 / (1 + np.exp(-t))
@@ -15,7 +14,8 @@ class NeuralNetwork:
     def __init__(self, x, y, num_layers=2, num_nodes=2, lr=0.01, max_iter=10000):
         self.x = np.array(x)
         self.y = np.array([y]).T
-        
+        if num_nodes < 1: num_nodes = 1
+
         #create the weights from the inputs to the first layer
         self.weights = [np.random.rand(len(self.x[0]), num_nodes)]
         for i in range(num_layers-1):
@@ -31,17 +31,18 @@ class NeuralNetwork:
 
     def train(self, learning_rate, max_iter):
         for i in range(max_iter):
-            self.feedforward(self.x)
+            self.layers = self.feedforward(self.x)
             self.backprop(learning_rate)
 
     def feedforward(self, x):
         # contains the input, hidden, and output layers
-        self.layers = [x]
+        layers = [x]
         
         for w in self.weights:
-            z = np.dot(self.layers[-1], w)
-            self.layers.append(sigmoid(z))
-        self.outputs = self.layers[-1]
+            z = np.dot(layers[-1], w)
+            layers.append(sigmoid(z))
+        self.outputs = layers[-1]
+        return layers
 
     def backprop(self, learning_rate):
         error = self.outputs - self.y
@@ -67,30 +68,32 @@ class NeuralNetwork:
         self.feedforward(inputs)
         return np.rint(self.outputs)
 
+    def score(self):
+        score = np.sum(np.rint(self.layers[-1]) == self.y)
+        return score / len(self.y)
+
     def plot_error_stats(self):
         mp.plot(range(len(self.error_history)), self.error_history)
         mp.title("Error stats")
         mp.xlabel("Iteration")
         mp.ylabel("Average Absolute Error")
         mp.ylim([0,1])
-        show()
+        mp.show()
+        
+        print("\nTRAINING OUTPUTS:")
+        for a,b in zip(self.layers[-1], np.rint(self.layers[-1])):
+            print("%f --> %d" % (a, b))
+        print("Accuracy: %.2f%%" % (self.score() * 100))
 
 # simple test data
 x = [[0,1,0],[0,0,1],[1,0,0],[1,1,0],[1,1,1]]
 y = [1,0,0,1,1]
-# x = [[0,0,1],[0,1,1],[1,0,1],[1,1,1]]
-# y = [0,1,1,0]
 
 # create neural network
-nn = NeuralNetwork(x=x, y=y, num_layers=1, num_nodes=2, lr=.1, max_iter=10000)
+nn = NeuralNetwork(x=x, y=y, num_layers=2, num_nodes=3, lr=.05, max_iter=10000)
 nn.plot_error_stats()
 
-# get prediction values on training set
-out = nn.predict(x)
+# predict new data point (comment out if necessary)
+pred = nn.predict([1,0,1])
 print("\nPREDICTION")
-for a,b in zip(nn.outputs, out):
-    print("%f --> %d" % (a, b))
-
-# prediction accuracy -- ONLY IF Y CONTAINS THE TARGET LABELS FOR PREDICTION ABOVE
-from sklearn.metrics import accuracy_score
-print("Accuracy: %.2f" % (accuracy_score(y, out) * 100))
+print("%f --> %d" % (nn.outputs[0], pred[0]))
