@@ -46,4 +46,6 @@ PREDICTION
 0.008062 --> 0
 ```
 
+<img src="https://github.com/arre1908/python-neural-net/blob/master/images/Figure_1.jpeg">
+
 > _NOTE: This will vary when a random seed is implemented_
